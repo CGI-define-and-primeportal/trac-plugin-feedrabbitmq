@@ -19,9 +19,9 @@ import re
 class Listener(Component):
     implements(ITicketChangeListener)
 
-    amqp = Option("rabbitmq", "location", default="amqp://guest:guest@localhost//")
-    project_identifier = Option("rabbitmq", "projectname")
-    active = BoolOption("rabbitmq", "active", default=False)    
+    amqp = Option("amqp", "broker", default="amqp://guest:guest@localhost//")
+    project_identifier = Option("amqp", "queue")
+    active = BoolOption("amqp", "active", default=False)    
 
     def ticket_created(self, ticket):
         event = {k: self._trasform_value(k, ticket[k]) for k in ticket.values}
