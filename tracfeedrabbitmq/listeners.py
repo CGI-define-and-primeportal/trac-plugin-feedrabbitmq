@@ -24,7 +24,7 @@ class Listener(Component):
     active = BoolOption("amqp", "active", default=False)    
 
     def ticket_created(self, ticket):
-        event = {k: self._trasform_value(k, ticket[k]) for k in ticket.values}
+        event = {k: self._transform_value(k, ticket[k]) for k in ticket.values}
         event.update({"_category": "created",
                       "_time": datetime.datetime.utcnow(),
                       "_ticket": ticket.id,
