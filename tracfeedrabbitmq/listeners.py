@@ -25,6 +25,7 @@ class Listener(Component):
 
     def ticket_created(self, ticket):
         event = {k: self._transform_value(k, ticket[k]) for k in ticket.values}
+        # TODO should we put a timezone mark on _time just in case, even though we say it'll be UTC?
         event.update({"_category": "created",
                       "_time": datetime.datetime.utcnow(),
                       "_ticket": ticket.id,
@@ -59,6 +60,7 @@ class Listener(Component):
         if field in ("cc", "keywords"):
             return re.split(r'[;,\s]+', value)
         # TODO deal with integer, date, float fields (CGI extensions)
+        # TODO ensure that 'changetime' is in UTC?
         return value
 
     def _send_events(self, events):
