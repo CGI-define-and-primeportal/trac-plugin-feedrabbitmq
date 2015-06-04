@@ -58,7 +58,9 @@ class Listener(Component):
 
     def _transform_value(self, field, value):
         if field in ("cc", "keywords"):
-            return re.split(r'[;,\s]+', value)
+            # note, Trac uses '[;,\s]+' (see trac/ticket/model.py)
+            # but CGI's fork doesn't include the whitespace
+            return [x.strip() for x in re.split(r'[;,]+', value)]
         # TODO deal with integer, date, float fields (CGI extensions)
         # TODO ensure that 'changetime' is in UTC?
         return value
