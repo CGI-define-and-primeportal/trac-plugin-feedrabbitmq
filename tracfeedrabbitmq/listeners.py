@@ -20,7 +20,8 @@ class Listener(Component):
     implements(ITicketChangeListener)
 
     amqp = Option("amqp", "broker", default="amqp://guest:guest@localhost//")
-    project_identifier = Option("amqp", "queue")
+    project_identifier = Option("amqp", "project_identifer")
+    queue_name = Option("amqp", "queue", default="ticket_event_feed")
     active = BoolOption("amqp", "active", default=False)    
 
     def ticket_created(self, ticket):
@@ -66,15 +67,15 @@ class Listener(Component):
         return value
 
     def _send_events(self, events):
-        # TODO should we actually be creating Connection() in __init__?
+        # TODO should we actually be creating Connection() and queue in __init__?
         if not self.active:
             return
-        queue_name = self.project_identifier or os.path.basename(self.env.path)
-        self.log.debug("Connecting to %s with queue %s", self.amqp, queue_name)
+        self.log.debug("Connecting to %s with queue %s", self.amqp, self.queue_name)
         with Connection(self.amqp) as conn:
-            queue = conn.SimpleQueue(queue_name,
+            queue = conn.SimpleQueue(self.queue_name,
                                      queue_opts={'durable': True})
             for event in events:
+                event['_project'] = self.project_identifier or os.path.basename(self.env.path)
                 self.log.debug("Putting event %s", event)
                 queue.put(event,
                           serializer="yaml")
