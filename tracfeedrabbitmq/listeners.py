@@ -66,6 +66,7 @@ class Listener(Component):
         return value
 
     def _send_events(self, events):
+        # TODO should we actually be creating Connection() in __init__?
         if not self.active:
             return
         queue_name = self.project_identifier or os.path.basename(self.env.path)
