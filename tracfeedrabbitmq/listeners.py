@@ -1,6 +1,7 @@
 from trac.core import Component, implements
 from trac.config import Option, BoolOption, ListOption
 from trac.ticket.api import ITicketChangeListener
+from trac.attachment import IAttachmentChangeListener
 from kombu import Connection, Exchange, Queue
 import datetime
 import os
@@ -13,12 +14,13 @@ from itertools import chain
 # while : ; do amqp-get -u amqp://guest:guest@localhost/%2F -q ticket_event_feed && echo "------------" ; sleep 1; done
 
 
-# TODO support IAttachmentChangeListener, IMilestoneChangeListener
+# TODO support IMilestoneChangeListener
 # TODO invent IHoursListener (Trachours plugin)
 # TODO admin ui to configure project_identifier and turn on active
 
 class Listener(Component):
-    implements(ITicketChangeListener)
+    implements(ITicketChangeListener,
+               IAttachmentChangeListener)
 
     amqp = Option("amqp", "broker", default="amqp://guest:guest@localhost//")
     project_identifier = Option("amqp", "project_identifer")
@@ -76,6 +78,38 @@ class Listener(Component):
         # we don't support this, as the authors of this plugin don't
         # support deleting changes in our downstream product
         pass
+
+    def attachment_added(self, attachment):
+        _time = datetime.datetime.utcnow()
+        if attachment.parent_realm != "ticket":
+            return
+        event = {"_category": "attachment-added",
+                 "_time": _time,
+                 "_ticket": attachment.parent_realm,
+                 "_author": attachment.author,                 
+                 "filename": attachment.filename,
+                 "description": attachment.description,
+                 "size": attachment.size}
+        self._send_events([event])
+
+    def attachment_deleted(self, attachment):
+        _time = datetime.datetime.utcnow()
+        if attachment.parent_realm != "ticket":
+            return
+        event = {"_category": "attachment-deleted",
+                 "_time": _time,
+                 "_ticket": attachment.parent_realm,
+                 "_author": attachment.author,                 
+                 "filename": attachment.filename}
+        self._send_events([event])
+
+    def attachment_version_deleted(self, attachment, old_version):
+        """Called when a particular version of an attachment is deleted."""
+        self.attachment_deleted(attachment)
+
+    def attachment_reparented(self, attachment, old_parent_realm, old_parent_id):
+        """Called when an attachment is reparented."""
+        self.attachment_added(attachment)
 
     def _transform_value(self, field, value):
         if field in ("cc", "keywords"):
