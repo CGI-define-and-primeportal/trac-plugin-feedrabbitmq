@@ -122,6 +122,7 @@ class Listener(Component):
 
     def _send_events(self, events):
         # TODO should we actually be creating Connection() and queue in __init__?
+        # TODO What can we do if we can't connect? Buffer in our own database?
         if not self.active:
             return
         self.log.debug("Connecting to %s with queues %s", self.amqp, self.queue_names)
