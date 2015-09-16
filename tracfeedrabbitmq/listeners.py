@@ -5,6 +5,7 @@ from kombu import Connection, Exchange, Queue
 import datetime
 import os
 import re
+from itertools import chain
 
 ## If you want to see the messages, try:
 # amqp-consume -u amqp://guest:guest@localhost/%2F -q ticket_event_feed cat
@@ -35,12 +36,23 @@ class Listener(Component):
             
     def ticket_changed(self, ticket, comment, author, old_values):
         _time = datetime.datetime.utcnow()
-        self._send_events(({"_category": "changed",
-                            "_time": _time,
-                            "_ticket": ticket.id,
-                            "_author": author,
-                            k: self._transform_value(k, ticket[k])}
-                           for k, v in old_values.iteritems()))
+        if comment:
+            comment_event = [{"_category": "comment",
+                              "_time": _time,
+                              "_ticket": ticket.id,
+                              "_author": author,
+                              "comment": comment}]
+        else:
+            comment_event = []
+        # produces one event for each item in old_values, plus
+        # possibly the comment
+        self._send_events(chain(comment_event,
+                                ({"_category": "changed",
+                                  "_time": _time,
+                                  "_ticket": ticket.id,
+                                  "_author": author,
+                                  k: self._transform_value(k, ticket[k])}
+                                 for k, v in old_values.iteritems())))
     
     def ticket_deleted(self, ticket):
         event = {"_category": "deleted",
@@ -49,8 +61,14 @@ class Listener(Component):
         self._send_events([event])
 
     def ticket_comment_modified(self, ticket, cdate, author, comment, old_comment):
-        # we don't send comments to the queue anyway
-        pass
+        _time = datetime.datetime.utcnow()        
+        event = {"_category": "changed",
+                 "_time": _time,
+                 "_ticket": ticket.id,
+                 "_author": author,
+                 "_cdate": cdate,                 
+                 "comment": comment}
+        self._send_events([event])
 
     def ticket_change_deleted(self, ticket, cdate, changes):
         # we don't support this, as the authors of this plugin don't
