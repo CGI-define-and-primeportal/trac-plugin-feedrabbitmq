@@ -1,5 +1,5 @@
 from trac.core import Component, implements
-from trac.config import Option, BoolOption
+from trac.config import Option, BoolOption, ListOption
 from trac.ticket.api import ITicketChangeListener
 from kombu import Connection, Exchange, Queue
 import datetime
@@ -21,7 +21,7 @@ class Listener(Component):
 
     amqp = Option("amqp", "broker", default="amqp://guest:guest@localhost//")
     project_identifier = Option("amqp", "project_identifer")
-    queue_name = Option("amqp", "queue", default="ticket_event_feed")
+    queue_names = ListOption("amqp", "queues", default="ticket_event_feed")
     active = BoolOption("amqp", "active", default=False)    
 
     def ticket_created(self, ticket):
@@ -70,13 +70,13 @@ class Listener(Component):
         # TODO should we actually be creating Connection() and queue in __init__?
         if not self.active:
             return
-        self.log.debug("Connecting to %s with queue %s", self.amqp, self.queue_name)
+        self.log.debug("Connecting to %s with queues %s", self.amqp, self.queue_names)
         with Connection(self.amqp) as conn:
-            queue = conn.SimpleQueue(self.queue_name,
-                                     queue_opts={'durable': True})
+            queues = [conn.SimpleQueue(queue_name, queue_opts={'durable': True})
+                      for queue_name in self.queue_names]
             for event in events:
                 event['_project'] = self.project_identifier or os.path.basename(self.env.path)
-                self.log.debug("Putting event %s", event)
-                queue.put(event,
-                          serializer="yaml")
+                for queue in queues:
+                    self.log.debug("Putting event %s to queue %s", event, queue_name)
+                    queue.put(event, serializer="yaml")
         
