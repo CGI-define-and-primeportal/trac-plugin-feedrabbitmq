@@ -28,8 +28,9 @@ class Listener(Component):
     def ticket_created(self, ticket):
         event = {k: self._transform_value(k, ticket[k]) for k in ticket.values}
         # TODO should we put a timezone mark on _time just in case, even though we say it'll be UTC?
+        _time = datetime.datetime.utcnow()
         event.update({"_category": "created",
-                      "_time": datetime.datetime.utcnow(),
+                      "_time": _time,
                       "_ticket": ticket.id,
                       "_author": ticket['reporter']})
         self._send_events([event])
@@ -55,8 +56,9 @@ class Listener(Component):
                                  for k, v in old_values.iteritems())))
     
     def ticket_deleted(self, ticket):
+        _time = datetime.datetime.utcnow()        
         event = {"_category": "deleted",
-                 "_time": datetime.datetime.utcnow(),
+                 "_time": _time,
                  "_ticket": ticket.id}
         self._send_events([event])
 
