@@ -7,9 +7,9 @@ import os
 import re
 
 ## If you want to see the messages, try:
-# amqp-consume -u amqp://guest:guest@localhost/%2F -q trac-plugin-feedrabbitmq-project cat
+# amqp-consume -u amqp://guest:guest@localhost/%2F -q ticket_event_feed cat
 ## or
-# while : ; do amqp-get -u amqp://guest:guest@localhost/%2F -q trac-plugin-feedrabbitmq-project && echo "------------" ; sleep 1; done
+# while : ; do amqp-get -u amqp://guest:guest@localhost/%2F -q ticket_event_feed && echo "------------" ; sleep 1; done
 
 
 # TODO support IAttachmentChangeListener, IMilestoneChangeListener
