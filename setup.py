@@ -17,7 +17,8 @@ setup(
     entry_points = {
         'trac.plugins': [
             'tracfeedrabbitmq = tracfeedrabbitmq',
-            'tracfeedrabbitmq.listeners = tracfeedrabbitmq.listeners',            
+            'tracfeedrabbitmq.listeners = tracfeedrabbitmq.listeners',
+            'tracfeedrabbitmq.slack = tracfeedrabbitmq.slack',
         ],
     },
 )
