@@ -13,7 +13,7 @@ setup(
             'htdocs/js/*.js',
         ]
     },
-    install_requires = ['kombu', 'pyyaml'],
+    install_requires = ['pyyaml', 'celery', 'requests'],
     entry_points = {
         'trac.plugins': [
             'tracfeedrabbitmq = tracfeedrabbitmq',
