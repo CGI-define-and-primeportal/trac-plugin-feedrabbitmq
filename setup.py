@@ -19,6 +19,7 @@ setup(
             'tracfeedrabbitmq = tracfeedrabbitmq',
             'tracfeedrabbitmq.listeners = tracfeedrabbitmq.listeners',
             'tracfeedrabbitmq.slack = tracfeedrabbitmq.slack',
+            'tracfeedrabbitmq.servicebus = tracfeedrabbitmq.servicebus',
         ],
     },
 )
