@@ -37,7 +37,7 @@ class TicketListener(Component):
                  "time": _time,
                  "ticket": ticket.id,
                  "author": ticket['reporter']}
-        event['state'] = {k: self._transform_value(k, ticket[k]) for k in ticket.values}
+        event['state'] = dict((k, self._transform_value(k, ticket[k])) for k in ticket.values)
         QueueFeeder(self.env).send_events([event])
             
     def ticket_changed(self, ticket, comment, author, old_values):
@@ -47,8 +47,8 @@ class TicketListener(Component):
                  "comment": comment,                 
                  "ticket": ticket.id,
                  "author": author}
-        event['change'] = {k: self._transform_value(k, ticket[k]) for k in old_values}
-        event['state'] = {k: self._transform_value(k, ticket[k]) for k in ticket.values}
+        event['change'] = dict((k, self._transform_value(k, ticket[k])) for k in old_values)
+		event['state'] = dict((k, self._transform_value(k, ticket[k])) for k in ticket.values)
         QueueFeeder(self.env).send_events([event])
     
     def ticket_deleted(self, ticket):
