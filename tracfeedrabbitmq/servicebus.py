@@ -52,12 +52,12 @@ class MSServiceBusEmitter(Component):
     key = Option('microsoft servicebus', 'key')
     namespace = Option('microsoft servicebus', 'namespace')
     queuename = Option('microsoft servicebus', 'queuename')
-    
+    adminpagename = Option('microsoft servicebus', 'admin_page_name', 'Azure Service Bus')
 
     # IAdminPanelProvider
     def get_admin_panels(self, req):
         if req.perm.has_permission('TICKET_ADMIN'):
-            yield ('integrations', 'Integrations', 'unifiedportal', 'CGI Unified Portal')
+            yield ('integrations', 'Integrations', 'servicebus', self.adminpagename)
 
     def render_admin_panel(self, req, cat, page, path_info):
         if req.method == 'POST':
@@ -66,7 +66,7 @@ class MSServiceBusEmitter(Component):
             self.config.set('microsoft servicebus', 'namespace', req.args.get('namespace'))
             self.config.set('microsoft servicebus', 'queuename', req.args.get('queuename'))
             self.config.save()
-            add_notice(req, "Saved CGI Unified Portal integration settings")
+            add_notice(req, "Saved integration settings")
             req.redirect(req.href.admin(cat, page))
                 
         return 'servicebus_admin.html', {'issuer': self.issuer,
