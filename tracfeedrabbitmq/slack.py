@@ -1,10 +1,13 @@
 from celery import Celery
 import requests
 import json
+import pkg_resources
 
 from trac.core import Component, implements
 from trac.config import Option
 from trac.resource import Resource, get_resource_url
+from trac.admin import IAdminPanelProvider
+from trac.web.chrome import ITemplateProvider, add_notice
 
 from api import ICeleryTask
 
@@ -15,7 +18,7 @@ from api import ICeleryTask
 app = Celery('slack', backend='amqp', broker='amqp://')
 
 @app.task(name='post-to-slack')
-def post_message(webhook_url, icon_url, channel, resource_url, event):
+def post_message(webhook_url, icon_url, resource_url, event):
     if event['category'] == "changed":
         prefix = "Project {project} Ticket <{resource_url}|#{ticket}> changed by {author}".format(
             project=event['project'],
@@ -34,8 +37,7 @@ def post_message(webhook_url, icon_url, channel, resource_url, event):
                     "short": len(v) < 10
                     })
             
-        payload = {"channel": channel,
-                   "username": "#define",
+        payload = {"username": "#define",
                    "text": prefix,
                    "icon_url": icon_url,
                    "attachments": [
@@ -58,17 +60,40 @@ def post_message(webhook_url, icon_url, channel, resource_url, event):
         #print r.text
         return r
 
+# TODO, port this to IAsyncTicketChangeListener from ICeleryTask
 class SlackEmitter(Component):
-    implements(ICeleryTask)
+    implements(ICeleryTask, IAdminPanelProvider, ITemplateProvider)
 
     webhook = Option('slack', 'webhook')
-    channel = Option('slack', 'channel')
     icon = Option('slack', 'icon')
-    
+
+    # ICeleryTask
     def run(self, event):
         resource_url = self.env.abs_href("ticket", event["ticket"])
         return post_message.delay(self.webhook,
                                   self.icon,
-                                  self.channel,
                                   resource_url,
                                   event)
+
+    # IAdminPanelProvider
+    def get_admin_panels(self, req):
+        if req.perm.has_permission('TRAC_ADMIN'):
+            yield ('integrations', 'Integrations', 'slack', 'Slack')
+
+    def render_admin_panel(self, req, cat, page, path_info):
+        if req.method == 'POST':
+            self.config.set('slack', 'webhook', req.args.get('webhook'))
+            self.config.save()
+            add_notice(req, "Saved Slack integration settings")
+            req.redirect(req.href.admin(cat, page))
+                
+        return 'slack_admin.html', {'webhook': self.webhook}
+
+    # ITemplateProvider
+    def get_htdocs_dirs(self):
+        yield 'slack', pkg_resources.resource_filename(__name__,
+                                                       'htdocs')
+
+    def get_templates_dirs(self):
+        yield pkg_resources.resource_filename(__name__, 'templates')
+
