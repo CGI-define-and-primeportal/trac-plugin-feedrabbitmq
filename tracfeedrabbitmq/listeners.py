@@ -11,9 +11,9 @@ from itertools import chain
 
 import pytz
 import time
-import proton
+#import proton
 
-from api import ICeleryTask
+from api import ICeleryTask, IAsyncTicketChangeListener
 
 # TODO support IMilestoneChangeListener
 # TODO admin ui to configure project_identifier

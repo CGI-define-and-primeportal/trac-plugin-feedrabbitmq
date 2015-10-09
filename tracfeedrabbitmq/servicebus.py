@@ -2,6 +2,7 @@ from celery import Celery
 import yaml
 import urllib
 import pprint
+import pkg_resources
 
 # ./development-environment/bin/pip install python-qpid-proton
 from proton import Messenger, Message
@@ -12,11 +13,13 @@ from qpid.messaging import Connection
 from trac.core import Component, implements
 from trac.config import Option
 from trac.resource import Resource, get_resource_url
-from trac.admin import IAdminCommandProvider
+from trac.admin import IAdminCommandProvider, IAdminPanelProvider
+from trac.web.chrome import ITemplateProvider, add_notice
 
 from api import ICeleryTask
 
-# TODO, read the backend and broker from trac.ini
+# TODO, switch to IAsyncTicketChangeListener
+
 app = Celery('msservicebus', backend='amqp', broker='amqp://')
 
 @app.task(name='post-to-msservicebus')
@@ -47,13 +50,44 @@ def relay_event(issuer, key, namespace, queuename, event):
     messenger.send()
 
 class MSServiceBusEmitter(Component):
-    implements(ICeleryTask, IAdminCommandProvider)
+    implements(ICeleryTask, IAdminPanelProvider, ITemplateProvider, IAdminCommandProvider)
 
     issuer = Option('microsoft servicebus', 'issuer')
     key = Option('microsoft servicebus', 'key')
     namespace = Option('microsoft servicebus', 'namespace')
     queuename = Option('microsoft servicebus', 'queuename')
+    adminpagename = Option('microsoft servicebus', 'admin_page_name', 'Azure Service Bus')
     
+
+    # IAdminPanelProvider
+    def get_admin_panels(self, req):
+        if req.perm.has_permission('TICKET_ADMIN'):
+            yield ('integrations', 'Integrations', 'servicebus', self.adminpagename)
+
+    def render_admin_panel(self, req, cat, page, path_info):
+        if req.method == 'POST':
+            self.config.set('microsoft servicebus', 'issuer', req.args.get('issuer'))
+            self.config.set('microsoft servicebus', 'key', req.args.get('key'))
+            self.config.set('microsoft servicebus', 'namespace', req.args.get('namespace'))
+            self.config.set('microsoft servicebus', 'queuename', req.args.get('queuename'))
+            self.config.save()
+            add_notice(req, "Saved CGI Unified Portal integration settings")
+            req.redirect(req.href.admin(cat, page))
+                
+        return 'servicebus_admin.html', {'issuer': self.issuer,
+                                         'key': self.key,
+                                         'namespace': self.namespace,
+                                         'queuename': self.queuename}
+
+    # ITemplateProvider
+    def get_htdocs_dirs(self):
+        yield 'servicebus', pkg_resources.resource_filename(__name__,
+                                                            'htdocs')
+
+    def get_templates_dirs(self):
+        yield pkg_resources.resource_filename(__name__, 'templates')
+
+
     # ICeleryTask
     def run(self, event):
         return relay_event.delay(self.issuer,
