@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="admin.html" />
+
+  <head>
+    <title>Slack Integration</title>
+  </head>
+
+  <body>
+    <h1>Slack Integration</h1>
+    <p>
+      Visit <a href="https://www.slack.com/services/new/incoming-webhook">slack.com/services/new/incoming-webhook</a>
+      to create a new webhook address, and provide that address here:
+    </p>
+    <form method="post" action="">
+      <input type="text" name="webhook" value="${webhook}" class="slim" />
+      <button type="submit" class="btn btn-mini btn-primary" value="Submit">
+	<i class="fa fa-check fa-inverse"></i> Submit
+      </button>
+    </form>
+  </body>
+</html>
