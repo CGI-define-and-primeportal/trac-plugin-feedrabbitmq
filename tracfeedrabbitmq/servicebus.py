@@ -7,9 +7,6 @@ import pkg_resources
 # ./development-environment/bin/pip install python-qpid-proton
 from proton import Messenger, Message
 
-# ./development-environment/bin/pip install qpid-python
-from qpid.messaging import Connection
-
 from trac.core import Component, implements
 from trac.config import Option
 from trac.resource import Resource, get_resource_url
