@@ -56,7 +56,7 @@ class MSServiceBusEmitter(Component):
 
     # IAdminPanelProvider
     def get_admin_panels(self, req):
-        if req.perm.has_permission('TICKET_ADMIN'):
+        if req.perm.has_permission('TRAC_ADMIN'):
             yield ('integrations', 'Integrations', 'servicebus', self.adminpagename)
 
     def render_admin_panel(self, req, cat, page, path_info):
