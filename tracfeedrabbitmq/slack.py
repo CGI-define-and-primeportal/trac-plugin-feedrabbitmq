@@ -69,11 +69,12 @@ class SlackEmitter(Component):
 
     # ICeleryTask
     def run(self, event):
-        resource_url = self.env.abs_href("ticket", event["ticket"])
-        return post_message.delay(self.webhook,
-                                  self.icon,
-                                  resource_url,
-                                  event)
+        if self.webhook:
+            resource_url = self.env.abs_href("ticket", event["ticket"])
+            return post_message.delay(self.webhook,
+                                      self.icon,
+                                      resource_url,
+                                      event)
 
     # IAdminPanelProvider
     def get_admin_panels(self, req):
