@@ -106,17 +106,15 @@ class MSServiceBusEmitter(Component):
             
         messenger = Messenger()
 
-        address = "amqps://{issuer}:{key}@{namespace}.servicebus.windows.net/{queuename}".format(
-            issuer = self.issuer,
-            key = urllib.quote(self.key, ""),
-            namespace = self.namespace,
-            queuename = self.queuename)
-
-        censored_address = "amqps://{issuer}:{key}@{namespace}.servicebus.windows.net/{queuename}".format(
-            issuer = self.issuer,
-            key = "XXX",
-            namespace = self.namespace,
-            queuename = self.queuename)
+        address_syntax = "amqps://{issuer}:{key}@{namespace}.servicebus.windows.net/{queuename}"
+        address = address_syntax.format(issuer = self.issuer,
+                                        key = urllib.quote(self.key, ""),
+                                        namespace = self.namespace,
+                                        queuename = self.queuename)
+        censored_address = address_syntax.format(issuer = self.issuer,
+                                                 key = "XXX",
+                                                 namespace = self.namespace,
+                                                 queuename = self.queuename)
 
         print "Subscribing to %s" % censored_address
         messenger.subscribe(address)
