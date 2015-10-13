@@ -99,6 +99,11 @@ class MSServiceBusEmitter(Component):
                None, self._do_dump)
 
     def _do_dump(self, args=None):
+
+        if not (self.issuer and self.key and self.namespace and self.queuename):
+            print "Service bus is not configured"
+            return
+            
         messenger = Messenger()
 
         address = "amqps://{issuer}:{key}@{namespace}.servicebus.windows.net/{queuename}".format(
