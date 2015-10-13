@@ -85,11 +85,12 @@ class MSServiceBusEmitter(Component):
 
     # ICeleryTask
     def run(self, event):
-        return relay_event.delay(self.issuer,
-                                 self.key,
-                                 self.namespace,
-                                 self.queuename,
-                                 event)
+        if self.issuer and self.key and self.namespace and self.queuename:
+            return relay_event.delay(self.issuer,
+                                     self.key,
+                                     self.namespace,
+                                     self.queuename,
+                                     event)
 
     # IAdminCommandProvider
     def get_admin_commands(self):
